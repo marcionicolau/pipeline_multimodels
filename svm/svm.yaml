@@ -1,0 +1,18 @@
+name: Support Vector Classifier (SVM)
+description: Train a SVM Classifier
+
+inputs:
+  - {name: Data, type: LocalPath, description: 'Path were data is stored.'}
+outputs:
+  - {name: Accuracy, type: Float, description: 'SVM Accuracy result.'}
+
+implementation:
+  container:
+    image: marcionicolau/kfc:svm_v1
+    command: [
+      --data,
+      {inputPath: Data},
+
+      --accuracy,
+      {outputPath: Accuracy},
+    ]

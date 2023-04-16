@@ -1,0 +1,19 @@
+name: Decision Tree classifier
+description: Trains a  decision tree classifier
+
+inputs:
+- {name: Data, type: LocalPath, description: 'Path where data is stored.'}
+outputs:
+- {name: Accuracy, type: Float, description: 'Decision Tree Accuracy result'}
+
+implementation:
+  container:
+    image: marcionicolau/kfc:decision_tree_v1
+    command: [
+      --data,
+      {inputPath: Data},
+
+      --accuracy,
+      {outputPath: Accuracy},
+
+    ]

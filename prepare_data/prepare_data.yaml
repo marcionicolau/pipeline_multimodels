@@ -1,0 +1,13 @@
+name: Prepare Dataset
+description: Download toy data from sklearn datasets
+
+outputs:
+  - {name: Data, type: LocalPath, description: 'Path where data will be stored.'}
+
+implementation:
+  container:
+    image: marcionicolau/kfc:prepare_data_v1
+    command: [
+      --data,
+      {outputPath: Data},
+    ]

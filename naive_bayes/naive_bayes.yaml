@@ -1,0 +1,18 @@
+name: Naive Bayes Classifier
+description: Train a Naive Bayes Classifier
+
+inputs:
+  - {name: Data, type: LocalPath, description: 'Path were data is stored.'}
+outputs:
+  - {name: Accuracy, type: Float, description: 'Naive Bayes Accuracy result.'}
+
+implementation:
+  container:
+    image: marcionicolau/kfc:naive_bayes_v1
+    command: [
+      --data,
+      {inputPath: Data},
+
+      --accuracy,
+      {outputPath: Accuracy},
+    ]

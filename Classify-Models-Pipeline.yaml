@@ -1,0 +1,248 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: ml-models-pipeline-
+  annotations: {pipelines.kubeflow.org/kfp_sdk_version: 1.8.18, pipelines.kubeflow.org/pipeline_compilation_time: '2023-04-15T21:11:22.294761',
+    pipelines.kubeflow.org/pipeline_spec: '{"description": "Run Decision Tree, Logistic
+      Regression, SVM and Naive Bayes for classification problem.", "name": "ML Models
+      Pipeline"}'}
+  labels: {pipelines.kubeflow.org/kfp_sdk_version: 1.8.18}
+spec:
+  entrypoint: ml-models-pipeline
+  templates:
+  - name: decision-tree-classifier
+    container:
+      args: []
+      command: [--data, /tmp/inputs/Data/data, --accuracy, /tmp/outputs/Accuracy/data]
+      image: marcionicolau/kfc:decision_tree_v1
+    inputs:
+      artifacts:
+      - {name: prepare-dataset-Data, path: /tmp/inputs/Data/data}
+    outputs:
+      parameters:
+      - name: decision-tree-classifier-Accuracy
+        valueFrom: {path: /tmp/outputs/Accuracy/data}
+      artifacts:
+      - {name: decision-tree-classifier-Accuracy, path: /tmp/outputs/Accuracy/data}
+    metadata:
+      labels:
+        pipelines.kubeflow.org/kfp_sdk_version: 1.8.18
+        pipelines.kubeflow.org/pipeline-sdk-type: kfp
+        pipelines.kubeflow.org/enable_caching: "true"
+      annotations: {pipelines.kubeflow.org/component_spec: '{"description": "Trains
+          a  decision tree classifier", "implementation": {"container": {"command":
+          ["--data", {"inputPath": "Data"}, "--accuracy", {"outputPath": "Accuracy"}],
+          "image": "marcionicolau/kfc:decision_tree_v1"}}, "inputs": [{"description":
+          "Path where data is stored.", "name": "Data", "type": "LocalPath"}], "name":
+          "Decision Tree classifier", "outputs": [{"description": "Decision Tree Accuracy
+          result", "name": "Accuracy", "type": "Float"}]}', pipelines.kubeflow.org/component_ref: '{"digest":
+          "65f4f05b1fd0b3f275e73193d4bc81a907b7c8e0463e4b5b4d37de2f6f47a933", "url":
+          "decision_tree/decision_tree.yaml"}'}
+  - name: logistic-regression-classifier
+    container:
+      args: []
+      command: [--data, /tmp/inputs/Data/data, --accuracy, /tmp/outputs/Accuracy/data]
+      image: marcionicolau/kfc:logistic_regression_v1
+    inputs:
+      artifacts:
+      - {name: prepare-dataset-Data, path: /tmp/inputs/Data/data}
+    outputs:
+      parameters:
+      - name: logistic-regression-classifier-Accuracy
+        valueFrom: {path: /tmp/outputs/Accuracy/data}
+      artifacts:
+      - {name: logistic-regression-classifier-Accuracy, path: /tmp/outputs/Accuracy/data}
+    metadata:
+      labels:
+        pipelines.kubeflow.org/kfp_sdk_version: 1.8.18
+        pipelines.kubeflow.org/pipeline-sdk-type: kfp
+        pipelines.kubeflow.org/enable_caching: "true"
+      annotations: {pipelines.kubeflow.org/component_spec: '{"description": "Trains
+          a Logistic Regression Classifier", "implementation": {"container": {"command":
+          ["--data", {"inputPath": "Data"}, "--accuracy", {"outputPath": "Accuracy"}],
+          "image": "marcionicolau/kfc:logistic_regression_v1"}}, "inputs": [{"description":
+          "Path where data is stored.", "name": "Data", "type": "LocalPath"}], "name":
+          "Logistic Regression Classifier", "outputs": [{"description": "Logistic
+          Regression Accuracy result.", "name": "Accuracy", "type": "Float"}]}', pipelines.kubeflow.org/component_ref: '{"digest":
+          "a6a5eb7d45059db2fa6f073bf2ff1287318775bfef85c6096a78cdaf23f24734", "url":
+          "logistic_regression/logistic_regression.yaml"}'}
+  - name: ml-models-pipeline
+    dag:
+      tasks:
+      - name: decision-tree-classifier
+        template: decision-tree-classifier
+        dependencies: [prepare-dataset]
+        arguments:
+          artifacts:
+          - {name: prepare-dataset-Data, from: '{{tasks.prepare-dataset.outputs.artifacts.prepare-dataset-Data}}'}
+      - name: logistic-regression-classifier
+        template: logistic-regression-classifier
+        dependencies: [prepare-dataset]
+        arguments:
+          artifacts:
+          - {name: prepare-dataset-Data, from: '{{tasks.prepare-dataset.outputs.artifacts.prepare-dataset-Data}}'}
+      - name: naive-bayes-classifier
+        template: naive-bayes-classifier
+        dependencies: [prepare-dataset]
+        arguments:
+          artifacts:
+          - {name: prepare-dataset-Data, from: '{{tasks.prepare-dataset.outputs.artifacts.prepare-dataset-Data}}'}
+      - {name: prepare-dataset, template: prepare-dataset}
+      - name: show-results
+        template: show-results
+        dependencies: [decision-tree-classifier, logistic-regression-classifier, naive-bayes-classifier,
+          support-vector-classifier-svm]
+        arguments:
+          parameters:
+          - {name: decision-tree-classifier-Accuracy, value: '{{tasks.decision-tree-classifier.outputs.parameters.decision-tree-classifier-Accuracy}}'}
+          - {name: logistic-regression-classifier-Accuracy, value: '{{tasks.logistic-regression-classifier.outputs.parameters.logistic-regression-classifier-Accuracy}}'}
+          - {name: naive-bayes-classifier-Accuracy, value: '{{tasks.naive-bayes-classifier.outputs.parameters.naive-bayes-classifier-Accuracy}}'}
+          - {name: support-vector-classifier-svm-Accuracy, value: '{{tasks.support-vector-classifier-svm.outputs.parameters.support-vector-classifier-svm-Accuracy}}'}
+      - name: support-vector-classifier-svm
+        template: support-vector-classifier-svm
+        dependencies: [prepare-dataset]
+        arguments:
+          artifacts:
+          - {name: prepare-dataset-Data, from: '{{tasks.prepare-dataset.outputs.artifacts.prepare-dataset-Data}}'}
+  - name: naive-bayes-classifier
+    container:
+      args: []
+      command: [--data, /tmp/inputs/Data/data, --accuracy, /tmp/outputs/Accuracy/data]
+      image: marcionicolau/kfc:naive_bayes_v1
+    inputs:
+      artifacts:
+      - {name: prepare-dataset-Data, path: /tmp/inputs/Data/data}
+    outputs:
+      parameters:
+      - name: naive-bayes-classifier-Accuracy
+        valueFrom: {path: /tmp/outputs/Accuracy/data}
+      artifacts:
+      - {name: naive-bayes-classifier-Accuracy, path: /tmp/outputs/Accuracy/data}
+    metadata:
+      labels:
+        pipelines.kubeflow.org/kfp_sdk_version: 1.8.18
+        pipelines.kubeflow.org/pipeline-sdk-type: kfp
+        pipelines.kubeflow.org/enable_caching: "true"
+      annotations: {pipelines.kubeflow.org/component_spec: '{"description": "Train
+          a Naive Bayes Classifier", "implementation": {"container": {"command": ["--data",
+          {"inputPath": "Data"}, "--accuracy", {"outputPath": "Accuracy"}], "image":
+          "marcionicolau/kfc:naive_bayes_v1"}}, "inputs": [{"description": "Path were
+          data is stored.", "name": "Data", "type": "LocalPath"}], "name": "Naive
+          Bayes Classifier", "outputs": [{"description": "Naive Bayes Accuracy result.",
+          "name": "Accuracy", "type": "Float"}]}', pipelines.kubeflow.org/component_ref: '{"digest":
+          "178121edbf9c0e1b397cc04aaca19c166f5cf9a4d63613c24df3d398f81c43ef", "url":
+          "naive_bayes/naive_bayes.yaml"}'}
+  - name: prepare-dataset
+    container:
+      args: []
+      command: [--data, /tmp/outputs/Data/data]
+      image: marcionicolau/kfc:prepare_data_v1
+    outputs:
+      artifacts:
+      - {name: prepare-dataset-Data, path: /tmp/outputs/Data/data}
+    metadata:
+      labels:
+        pipelines.kubeflow.org/kfp_sdk_version: 1.8.18
+        pipelines.kubeflow.org/pipeline-sdk-type: kfp
+        pipelines.kubeflow.org/enable_caching: "true"
+      annotations: {pipelines.kubeflow.org/component_spec: '{"description": "Download
+          toy data from sklearn datasets", "implementation": {"container": {"command":
+          ["--data", {"outputPath": "Data"}], "image": "marcionicolau/kfc:prepare_data_v1"}},
+          "name": "Prepare Dataset", "outputs": [{"description": "Path where data
+          will be stored.", "name": "Data", "type": "LocalPath"}]}', pipelines.kubeflow.org/component_ref: '{"digest":
+          "a37fc35abb545ab1efde801b8d9fb3dc7ac3c34ffe31fbe45d4fe5b7bd460131", "url":
+          "prepare_data/prepare_data.yaml"}'}
+  - name: show-results
+    container:
+      args: [--decision-tree, '{{inputs.parameters.decision-tree-classifier-Accuracy}}',
+        --logistic-regression, '{{inputs.parameters.logistic-regression-classifier-Accuracy}}',
+        --svm, '{{inputs.parameters.support-vector-classifier-svm-Accuracy}}', --naive-bayes,
+        '{{inputs.parameters.naive-bayes-classifier-Accuracy}}']
+      command:
+      - sh
+      - -ec
+      - |
+        program_path=$(mktemp)
+        printf "%s" "$0" > "$program_path"
+        python3 -u "$program_path" "$@"
+      - |
+        def show_results(decision_tree, logistic_regression, svm, naive_bayes):
+            print(f"Decision tree (accuracy): {decision_tree}")
+            print(f"Logistic regression (accuracy): {logistic_regression}")
+            print(f"SVM (SVC) (accuracy): {svm}")
+            print(f"Naive Bayes (Gaussian) (accuracy): {naive_bayes}")
+
+        import argparse
+        _parser = argparse.ArgumentParser(prog='Show results', description='')
+        _parser.add_argument("--decision-tree", dest="decision_tree", type=float, required=True, default=argparse.SUPPRESS)
+        _parser.add_argument("--logistic-regression", dest="logistic_regression", type=float, required=True, default=argparse.SUPPRESS)
+        _parser.add_argument("--svm", dest="svm", type=float, required=True, default=argparse.SUPPRESS)
+        _parser.add_argument("--naive-bayes", dest="naive_bayes", type=float, required=True, default=argparse.SUPPRESS)
+        _parsed_args = vars(_parser.parse_args())
+
+        _outputs = show_results(**_parsed_args)
+      image: python:3.7
+    inputs:
+      parameters:
+      - {name: decision-tree-classifier-Accuracy}
+      - {name: logistic-regression-classifier-Accuracy}
+      - {name: naive-bayes-classifier-Accuracy}
+      - {name: support-vector-classifier-svm-Accuracy}
+    metadata:
+      labels:
+        pipelines.kubeflow.org/kfp_sdk_version: 1.8.18
+        pipelines.kubeflow.org/pipeline-sdk-type: kfp
+        pipelines.kubeflow.org/enable_caching: "true"
+      annotations: {pipelines.kubeflow.org/component_spec: '{"implementation": {"container":
+          {"args": ["--decision-tree", {"inputValue": "decision_tree"}, "--logistic-regression",
+          {"inputValue": "logistic_regression"}, "--svm", {"inputValue": "svm"}, "--naive-bayes",
+          {"inputValue": "naive_bayes"}], "command": ["sh", "-ec", "program_path=$(mktemp)\nprintf
+          \"%s\" \"$0\" > \"$program_path\"\npython3 -u \"$program_path\" \"$@\"\n",
+          "def show_results(decision_tree, logistic_regression, svm, naive_bayes):\n    print(f\"Decision
+          tree (accuracy): {decision_tree}\")\n    print(f\"Logistic regression (accuracy):
+          {logistic_regression}\")\n    print(f\"SVM (SVC) (accuracy): {svm}\")\n    print(f\"Naive
+          Bayes (Gaussian) (accuracy): {naive_bayes}\")\n\nimport argparse\n_parser
+          = argparse.ArgumentParser(prog=''Show results'', description='''')\n_parser.add_argument(\"--decision-tree\",
+          dest=\"decision_tree\", type=float, required=True, default=argparse.SUPPRESS)\n_parser.add_argument(\"--logistic-regression\",
+          dest=\"logistic_regression\", type=float, required=True, default=argparse.SUPPRESS)\n_parser.add_argument(\"--svm\",
+          dest=\"svm\", type=float, required=True, default=argparse.SUPPRESS)\n_parser.add_argument(\"--naive-bayes\",
+          dest=\"naive_bayes\", type=float, required=True, default=argparse.SUPPRESS)\n_parsed_args
+          = vars(_parser.parse_args())\n\n_outputs = show_results(**_parsed_args)\n"],
+          "image": "python:3.7"}}, "inputs": [{"name": "decision_tree", "type": "Float"},
+          {"name": "logistic_regression", "type": "Float"}, {"name": "svm", "type":
+          "Float"}, {"name": "naive_bayes", "type": "Float"}], "name": "Show results"}',
+        pipelines.kubeflow.org/component_ref: '{}', pipelines.kubeflow.org/arguments.parameters: '{"decision_tree":
+          "{{inputs.parameters.decision-tree-classifier-Accuracy}}", "logistic_regression":
+          "{{inputs.parameters.logistic-regression-classifier-Accuracy}}", "naive_bayes":
+          "{{inputs.parameters.naive-bayes-classifier-Accuracy}}", "svm": "{{inputs.parameters.support-vector-classifier-svm-Accuracy}}"}'}
+  - name: support-vector-classifier-svm
+    container:
+      args: []
+      command: [--data, /tmp/inputs/Data/data, --accuracy, /tmp/outputs/Accuracy/data]
+      image: marcionicolau/kfc:svm_v1
+    inputs:
+      artifacts:
+      - {name: prepare-dataset-Data, path: /tmp/inputs/Data/data}
+    outputs:
+      parameters:
+      - name: support-vector-classifier-svm-Accuracy
+        valueFrom: {path: /tmp/outputs/Accuracy/data}
+      artifacts:
+      - {name: support-vector-classifier-svm-Accuracy, path: /tmp/outputs/Accuracy/data}
+    metadata:
+      labels:
+        pipelines.kubeflow.org/kfp_sdk_version: 1.8.18
+        pipelines.kubeflow.org/pipeline-sdk-type: kfp
+        pipelines.kubeflow.org/enable_caching: "true"
+      annotations: {pipelines.kubeflow.org/component_spec: '{"description": "Train
+          a SVM Classifier", "implementation": {"container": {"command": ["--data",
+          {"inputPath": "Data"}, "--accuracy", {"outputPath": "Accuracy"}], "image":
+          "marcionicolau/kfc:svm_v1"}}, "inputs": [{"description": "Path were data
+          is stored.", "name": "Data", "type": "LocalPath"}], "name": "Support Vector
+          Classifier (SVM)", "outputs": [{"description": "SVM Accuracy result.", "name":
+          "Accuracy", "type": "Float"}]}', pipelines.kubeflow.org/component_ref: '{"digest":
+          "ddc5e01846b6b98b55bb811964876fc682a1298831186855b7e90ca4468add13", "url":
+          "svm/svm.yaml"}'}
+  arguments:
+    parameters: []
+  serviceAccountName: pipeline-runner
