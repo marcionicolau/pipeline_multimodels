@@ -10,9 +10,11 @@ implementation:
   container:
     image: marcionicolau/kfc:naive_bayes_v1
     command: [
-      --data,
-      {inputPath: Data},
+               python, naive_bayes.py,
 
-      --accuracy,
-      {outputPath: Accuracy},
+               --data,
+               {inputPath: Data},
+
+               --accuracy,
+               {outputPath: Accuracy},
     ]

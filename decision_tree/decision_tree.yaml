@@ -10,10 +10,10 @@ implementation:
   container:
     image: marcionicolau/kfc:decision_tree_v1
     command: [
-      --data,
-      {inputPath: Data},
+               python, decision_tree.py,
+               --data,
+               {inputPath: Data},
 
-      --accuracy,
-      {outputPath: Accuracy},
-
+               --accuracy,
+               {outputPath: Accuracy},
     ]
