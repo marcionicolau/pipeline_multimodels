@@ -8,7 +8,7 @@ implementation:
   container:
     image: marcionicolau/kfc:prepare_data_v1
     command: [
-               python, prepare_date.py,
+               python, prepare_data.py,
                --data,
                {outputPath: Data},
     ]
